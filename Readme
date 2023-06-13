@@ -3,13 +3,13 @@
 Clone the repository to your favorite IDE, and in the repo's root directory, run
 
 ```
-python -m venv .venv
+python -m venv myenv
 
 (mac,linux)
    source .venv/bin/activate
 
 (windows)
-   .venv\Scripts\activate
+   .\myenv\Scripts\activate
 
 
 pip install -r requirements.txt
@@ -22,3 +22,18 @@ Then you should be good to start
 
 (windows)
    python .\app.py
+
+
+
+## Goals
+   1. pull data from API
+   2. store and clean data
+   3. diplay data in varrious dashboards
+
+## temp notes
+To retrieve the XML Schema Definition (.XSD) for the Player Profile use the following URL.
+https://feed.elasticstats.com/schema/hockey/profile-v7.0.xsd
+
+
+sample XML data and structure:
+https://developer.sportradar.com/files/nhl_v7_player_profile_example.xml
