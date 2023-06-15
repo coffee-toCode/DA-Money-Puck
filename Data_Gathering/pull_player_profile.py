@@ -20,7 +20,8 @@ with open("C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/Data_Gatheri
         for mapping in external_id_data['mappings']:
             del mapping['id']
         # Print the updated JSON data to the console
-        print(json.dumps(external_id_data))
+        # print(json.dumps(external_id_data))
+        print("external ID success")
 
 
 
@@ -34,14 +35,34 @@ We need to cycle through the external ids and insert them into the below URL in 
 There is no way to pull all of the player's profiles at once. 
 """
 
+
+
+# print(type(external_id_data["external_id"]))
+
+import json
 import http.client
+import time
+
+json_list = external_id_data
+
+base_url_start = "http://api.sportradar.us/nhl/trial/v7/en/players/"
+base_url_end = "/profile.json?api_key=zxrh73wswmh4zqbckym97pwr"
 
 conn = http.client.HTTPSConnection("api.sportradar.us")
 
-conn.request("GET", "http://api.sportradar.us/nhl/trial/v7/en/players/433de553-0f24-11e2-8525-18a905767e44/profile.json?api_key=zxrh73wswmh4zqbckym97pwr")
-
-res = conn.getresponse()
-data = res.read()
-
-print(data.decode("utf-8"))
-
+for i in range(2):
+    print(f"Iteration {i + 1}:")
+    for item in json_list["mappings"]:
+        url = base_url_start + str(item["external_id"]) + base_url_end
+        conn.request("GET", url)
+        response = conn.getresponse()
+        data = response.read().decode("utf-8")
+        try:
+            json_data = json.loads(data)
+            with open(f"response{item['external_id']}.json", "w") as outfile:
+                json.dump(json_data, outfile)
+            print(json_data)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON data: {e}")
+        conn.close()
+        time.sleep(1.1) # Wait for 1.1 seconds before making the next call
