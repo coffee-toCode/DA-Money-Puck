@@ -50,19 +50,18 @@ base_url_end = "/profile.json?api_key=zxrh73wswmh4zqbckym97pwr"
 
 conn = http.client.HTTPSConnection("api.sportradar.us")
 
-for i in range(2):
-    print(f"Iteration {i + 1}:")
-    for item in json_list["mappings"]:
-        url = base_url_start + str(item["external_id"]) + base_url_end
-        conn.request("GET", url)
-        response = conn.getresponse()
-        data = response.read().decode("utf-8")
-        try:
-            json_data = json.loads(data)
-            with open(f"response{item['external_id']}.json", "w") as outfile:
-                json.dump(json_data, outfile)
-            print(json_data)
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON data: {e}")
-        conn.close()
-        time.sleep(1.1) # Wait for 1.1 seconds before making the next call
+
+for item in json_list["mappings"]:
+    url = base_url_start + str(item["external_id"]) + base_url_end
+    conn.request("GET", url)
+    response = conn.getresponse()
+    data = response.read().decode("utf-8")
+    try:
+        json_data = json.loads(data)
+        with open(f"response{item['external_id']}.json", "w") as outfile:
+            json.dump(json_data, outfile)
+        print(json_data)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON data: {e}")
+    conn.close()
+    time.sleep(1.1) # Wait for 1.1 seconds before making the next call
