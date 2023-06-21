@@ -18,11 +18,13 @@ pip install -r requirements.txt
 Then you should be good to start
 
 
-## run the app
+<!-- ## run the app
 
 (windows)
-   python .\app.py
+   python .\app.py -->
 
+## updating requirements file: 
+   pip freeze > requirements.txt
 
 
 ## Goals
@@ -37,3 +39,10 @@ https://feed.elasticstats.com/schema/hockey/profile-v7.0.xsd
 
 sample XML data and structure:
 https://developer.sportradar.com/files/nhl_v7_player_profile_example.xml
+
+
+
+## To-do
+[x] Refactor the json files into a pandas dataframe (could also try using polars)
+[ ] Save dataframe into the postgresDB
+[x] Modularize code into separate functions or classes
