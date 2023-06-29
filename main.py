@@ -113,11 +113,17 @@ This step is optional and requires having made the API calls and saved the playe
 The goal here is to build a player profile dictionary from the saved player profiles. 
 """
 def build_player_profiles_dict(id_keys_list):
-        
+
     for key in id_keys_list:
         try:
             with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{key}.json") as infile:
+                """
+                1. call json file data
+                """
                 json_data = json.load(infile)
+                # flatten that data
+                flatten_json_iterative_solution
+                # coaless into a list of dictionaries(https://sparkbyexamples.com/pandas/pandas-convert-list-of-dictionaries-to-dataframe/?expand_article=1)
                 player_profiles_dict[key] = json_data
         except FileNotFoundError:
             # print(f"File response{key}.json not found")
@@ -166,50 +172,86 @@ def flatten_json_iterative_solution(player_profiles_dict):
     return player_profiles_dict
 
 
-# def create_data_frame(player_profiles_dict):
-#     df = pd.DataFrame(player_profiles_dict)
+def create_data_frame(player_profiles_dict):
+    df = pd.DataFrame(data = player_profiles_dict, index=[0])
 
-#     # write dataframe to a pickle file
-#     df.to_pickle('my_dataframe.pkl')
+    # write dataframe to a pickle file
+    df.to_pickle('my_dataframe.pkl')
+
+
+from sqlalchemy import exc
+from sqlalchemy.orm import Session
+#load dataframe into postgresql
+def database_connection(PW="testing123", HOST='localhost', PORT='5432', path='C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/my_dataframe.pkl'):
     
-#     # read dataframe from the same pickle file
-#     profile_df = pd.read_pickle('my_dataframe.pkl')
-#     return profile_df
-
-# #load dataframe into postgresql
-# def database_connection(PW="testing123", HOST='localhost', PORT='5432', profile_df=pd.read_pickle('my_dataframe.pkl')):
+    #read pickle file with pandas
+    profile_df = pd.read_pickle(path)
     
-#     #establishing the connection
-#     conn = psycopg2.connect(
-#         database="postgres",
-#         user='postgres',
-#         password=PW,
-#         host=HOST,
-#         port=PORT
-#     )
+    #establishing the connection
+    conn = psycopg2.connect(
+        database="postgres",
+        user='postgres',
+        password=PW,
+        host=HOST,
+        port=PORT
+    )
     
-#     # create SQLAlchemy engine to simplify writing of dataframe to postgres
-#     engine = create_engine('postgresql+psycopg2://postgres:'+PW+'@'+HOST+':'+PORT+'/postgres')
+    # create SQLAlchemy engine to simplify writing of dataframe to postgres
+    engine = create_engine('postgresql+psycopg2://postgres:'+PW+'@'+HOST+':'+PORT+'/postgres')
+
+    # create Session object bound to this engine
+    session = Session(engine)
     
-#     json.dumps(profile_df)
-#     # load dataframe into database - replace <table_name> with your desired table name
-#     profile_df.to_sql('Player Profiles', engine, if_exists='replace', index=False)
+    print("Connection established")
+    time.sleep(1)
 
-#     print("Connection established")
+    # load dataframe into database - replace <table_name> with your desired table name
+    
+    
+    # for value in profile_df:
+    #     print(profile_df[value])
+    try:
+    # Attempt to commit the changes to the database
+        profile_df[1:50].to_sql('Player_Profiles', engine, if_exists='replace')
+        session.commit()
+    except exc.IntegrityError:
+        # Handle the unique constraint violation error here if it occurs
+        pass
+        print("Error: Unique Constraint Violation")
 
-#     #Closing the connection
-#     conn.close()
-
+    # close the session and connection
+    session.close()
+    engine.dispose()
+    #Closing the connection
+    conn.close()
 
 
 def main():
     # scrape_player_id(PLAYER_MAPPINGS_APIKEY)
-    parse_id_keys(raw_player_id_data)
-    build_player_profiles_dict(id_keys_list)
-    flatten_json_iterative_solution(player_profiles_dict)
-    print(player_profiles_dict)
+    id_keys_list = parse_id_keys()
+    player_profiles_dict = build_player_profiles_dict(id_keys_list)
+    # player_profiles_dict = flatten_json_iterative_solution(player_profiles_dict)
+    
+    lst = []
+    for i in range(5):
+        try:
+            with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{id_keys_list[i]}.json") as infile:
+                json_data = json.load(infile)
+                lst.append(json_data)
+        except FileNotFoundError:
+            # print(f"File response{key}.json not found")
+            pass
+        except json.JSONDecodeError:
+            # print(f"Invalid JSON data in file response{key}.json")
+            pass
+            
+    df = pd.json_normalize(lst)
+
+    print(df)
+    print(df.shape)
+    print(df.info())    
     # create_data_frame(player_profiles_dict)
-    # database_connection(PW="testing123", HOST='localhost', PORT='5432', profile_df=pd.read_pickle('my_dataframe.pkl'))
+    # database_connection()
 
 if __name__ == "__main__":
     main()
