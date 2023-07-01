@@ -19,60 +19,37 @@ def parse_id_keys(raw_player_id_data='testing_scripts/sample_player_mappings(ID)
     # Return the list of external_id values
     return id_keys_list
 
-def build_player_profiles_dict(id_keys_list):
-
+def build_player_profiles_df(id_keys_list):
+    player_profiles_list = []
     for key in id_keys_list:
         try:
             with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{key}.json") as infile:
-                """
-                1. call json file data
-                """
                 json_data = json.load(infile)
-                # flatten that data
-                
-                json.normalize
-                # coaless into a list of dictionaries(https://sparkbyexamples.com/pandas/pandas-convert-list-of-dictionaries-to-dataframe/?expand_article=1)
-                player_profiles_dict[key] = json_data
+                player_profiles_list.append(json_data)
         except FileNotFoundError:
             # print(f"File response{key}.json not found")
             pass
         except json.JSONDecodeError:
             # print(f"Invalid JSON data in file response{key}.json")
             pass
-    return player_profiles_dict
 
-
-def create_data_frame(player_profiles_dict):
-    df = pd.DataFrame(data = player_profiles_dict, index=[0])
+    player_profiles_df = pd.json_normalize(player_profiles_list)
 
     # write dataframe to a pickle file
-    df.to_pickle('my_dataframe.pkl')
+    player_profiles_df.to_pickle('player_profiles_df.pkl')
+
+    return player_profiles_df
 
 
 def main():
     # scrape_player_id(PLAYER_MAPPINGS_APIKEY)
     id_keys_list = parse_id_keys()
-    player_profiles_dict = build_player_profiles_dict(id_keys_list)
-    # player_profiles_dict = flatten_json_iterative_solution(player_profiles_dict)
+    player_profiles_df = build_player_profiles_df(id_keys_list)
     
-    lst = []
-    for i in range(5):
-        try:
-            with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{id_keys_list[i]}.json") as infile:
-                json_data = json.load(infile)
-                lst.append(json_data)
-        except FileNotFoundError:
-            # print(f"File response{key}.json not found")
-            pass
-        except json.JSONDecodeError:
-            # print(f"Invalid JSON data in file response{key}.json")
-            pass
-            
-    df = pd.json_normalize(lst)
-
-    print(df)
-    print(df.shape)
-    print(df.info())    
+    print(player_profiles_df)
+    print(player_profiles_df.shape)
+    print(player_profiles_df.info())  
+    print(player_profiles_df.head(50))   
     # create_data_frame(player_profiles_dict)
     # database_connection()
 
