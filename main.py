@@ -116,6 +116,38 @@ def api_scrape_player_profiles(id_keys_list, PLAYER_PROFILE_APIKEY):
 This step creates a dataframe and then saves it into a pkl file. Run this only after having made the API calls and saved the players profiles' to json files. 
 The goal here is to build a player profile dataframe from the saved player profiles. 
 """
+def flatten_json_iterative_solution(player_profiles_list):
+    """Flatten a nested json file"""
+
+    def unpack(parent_key, parent_value):
+        """Unpack one level of nesting in json file"""
+        # Unpack one level only!!!
+        
+        if isinstance(parent_value, dict):
+            for key, value in parent_value.items():
+                temp1 = parent_key + '_' + key
+                yield temp1, value
+        elif isinstance(parent_value, list):
+            i = 0 
+            for value in parent_value:
+                temp2 = parent_key + '_'+str(i) 
+                i += 1
+                yield temp2, value
+        else:
+            yield parent_key, parent_value    
+
+            
+    # Keep iterating until the termination condition is satisfied
+    while True:
+        # Keep unpacking the json file until all values are atomic elements (not player_profiles_list or list)
+        player_profiles_list = dict(chain.from_iterable(starmap(unpack, player_profiles_list.items())))
+        # Terminate condition: not any value in the json file is player_profiles_list or list
+        if not any(isinstance(value, dict) for value in player_profiles_list.values()) and \
+           not any(isinstance(value, list) for value in player_profiles_list.values()):
+            break
+    return player_profiles_list
+
+
 def build_player_profiles_df(id_keys_list):
     player_profiles_list = []
     for key in id_keys_list:
@@ -129,8 +161,8 @@ def build_player_profiles_df(id_keys_list):
         except json.JSONDecodeError:
             # print(f"Invalid JSON data in file response{key}.json")
             pass
-
-    player_profiles_df = pd.json_normalize(player_profiles_list)
+    flat_list = flatten_json_iterative_solution(player_profiles_list)
+    player_profiles_df = pd.json_normalize(flat_list)
 
     # write dataframe to a pickle file
     player_profiles_df.to_pickle('player_profiles_df.pkl')
@@ -189,9 +221,9 @@ def main():
     player_profiles_df = build_player_profiles_df(id_keys_list)
     
     print(player_profiles_df)
-    print(player_profiles_df.shape)
-    print(player_profiles_df.info())  
-    print(player_profiles_df.head(50))   
+    # print(player_profiles_df.shape)
+    # print(player_profiles_df.info())  
+    # print(player_profiles_df.head(150))   
     # create_data_frame()
     # database_connection()
 
