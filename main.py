@@ -128,9 +128,7 @@ def build_player_profiles_lst(id_keys_list):
             pass
             
     df = pd.json_normalize(Profiles_lst)
-    print(df)
-    print(df.shape)
-    print(df.info())
+
 
 
 """
