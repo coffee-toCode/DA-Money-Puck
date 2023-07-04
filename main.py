@@ -6,8 +6,6 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
 from itertools import chain, starmap
-from sqlalchemy import exc
-from sqlalchemy.orm import Session
 
 
 # Load the environment variables from the .env file
@@ -83,9 +81,7 @@ def parse_id_keys(raw_player_id_data='testing_scripts/sample_player_mappings(ID)
 The next step is required due to the limitaitons of the sportradar API in that we are limited to 1 call/second and 1000 calls/month. 
 Therefore in order to only make a single set of API calls we will run this function and save the raw, returned data as json files for later use and practice.
 We need to cycle through the external ids and insert them into the below URL in order to pull each player's profile.
-There is no way to pull all of the player's profiles from the API with a single call.
-
-This preserves the api data as called. 
+There is no way to pull all of the player's profiles from the API with a single call. 
 """
 def api_scrape_player_profiles(id_keys_list, PLAYER_PROFILE_APIKEY):
     
@@ -112,12 +108,36 @@ def api_scrape_player_profiles(id_keys_list, PLAYER_PROFILE_APIKEY):
 
 
 """
---------Step 4--------:
-This step creates a dataframe and then saves it into a pkl file. Run this only after having made the API calls and saved the players profiles' to json files. 
-The goal here is to build a player profile dataframe from the saved player profiles. 
+--------Step 3(alternate)--------:
+This step is optional and requires having made the API calls and saved the players profiles' to json files. 
+The goal here is to build a player profile dictionary from the saved player profiles. 
 """
-def flatten_json_iterative_solution(player_profiles_list):
-    """Flatten a nested json file"""
+def build_player_profiles_lst(id_keys_list):
+
+    Profiles_lst = []
+    for key in id_keys_list:
+        try:
+            with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{key}.json") as infile:
+                json_data = json.load(infile)
+                Profiles_lst.append(json_data)
+        except FileNotFoundError:
+            # print(f"File response{key}.json not found")
+            pass
+        except json.JSONDecodeError:
+            # print(f"Invalid JSON data in file response{key}.json")
+            pass
+            
+    df = pd.json_normalize(Profiles_lst)
+
+
+
+"""
+--------Step 4--------:
+This step creates a dataframe and then saves it into a pkl file.  
+"""
+
+def flatten_json_iterative_solution(dictionary):
+    """Flatten any dictionary of dictionaries nested json file"""
 
     def unpack(parent_key, parent_value):
         """Unpack one level of nesting in json file"""
@@ -139,13 +159,14 @@ def flatten_json_iterative_solution(player_profiles_list):
             
     # Keep iterating until the termination condition is satisfied
     while True:
-        # Keep unpacking the json file until all values are atomic elements (not player_profiles_list or list)
-        player_profiles_list = dict(chain.from_iterable(starmap(unpack, player_profiles_list.items())))
-        # Terminate condition: not any value in the json file is player_profiles_list or list
-        if not any(isinstance(value, dict) for value in player_profiles_list.values()) and \
-           not any(isinstance(value, list) for value in player_profiles_list.values()):
+        # Keep unpacking the json file until all values are atomic elements (not player_profiles_dict or list)
+        player_profiles_dict = dict(chain.from_iterable(starmap(unpack, player_profiles_dict.items())))
+        # Terminate condition: not any value in the json file is player_profiles_dict or list
+        if not any(isinstance(value, dict) for value in player_profiles_dict.values()) and \
+           not any(isinstance(value, list) for value in player_profiles_dict.values()):
             break
-    return player_profiles_list
+
+    return player_profiles_dict
 
 
 def build_player_profiles_df(id_keys_list):
@@ -170,6 +191,8 @@ def build_player_profiles_df(id_keys_list):
     return player_profiles_df
 
 
+from sqlalchemy import exc
+from sqlalchemy.orm import Session
 #load dataframe into postgresql
 def database_connection(PW="testing123", HOST='localhost', PORT='5432', path='C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/my_dataframe.pkl'):
     
@@ -219,7 +242,7 @@ def main():
     # scrape_player_id(PLAYER_MAPPINGS_APIKEY)
     id_keys_list = parse_id_keys()
     player_profiles_df = build_player_profiles_df(id_keys_list)
-    
+
     print(player_profiles_df)
     # print(player_profiles_df.shape)
     # print(player_profiles_df.info())  
