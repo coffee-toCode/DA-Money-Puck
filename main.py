@@ -136,39 +136,39 @@ def build_player_profiles_lst(id_keys_list):
 This step creates a dataframe and then saves it into a pkl file.  
 """
 
-def flatten_json_iterative_solution(dictionary):
-    """Flatten any dictionary of dictionaries nested json file"""
+# def flatten_json_iterative_solution(dictionary):
+#     """Flatten any dictionary of dictionaries nested json file"""
 
-    def unpack(parent_key, parent_value):
-        """Unpack one level of nesting in json file"""
-        # Unpack one level only!!!
+#     def unpack(parent_key, parent_value):
+#         """Unpack one level of nesting in json file"""
+#         # Unpack one level only!!!
         
-        if isinstance(parent_value, dict):
-            for key, value in parent_value.items():
-                temp1 = parent_key + '_' + key
-                yield temp1, value
-        elif isinstance(parent_value, list):
-            i = 0 
-            for value in parent_value:
-                temp2 = parent_key + '_'+str(i) 
-                i += 1
-                yield temp2, value
-        else:
-            yield parent_key, parent_value    
+#         if isinstance(parent_value, dict):
+#             for key, value in parent_value.items():
+#                 temp1 = parent_key + '_' + key
+#                 yield temp1, value
+#         elif isinstance(parent_value, list):
+#             i = 0 
+#             for value in parent_value:
+#                 temp2 = parent_key + '_'+str(i) 
+#                 i += 1
+#                 yield temp2, value
+#         else:
+#             yield parent_key, parent_value    
 
             
-    # Keep iterating until the termination condition is satisfied
-    while True:
-        # Keep unpacking the json file until all values are atomic elements (not player_profiles_dict or list)
-        dictionary = dict(chain.from_iterable(starmap(unpack, dictionary.items())))
-        # Terminate condition: not any value in the json file is player_profiles_dict or list
-        if not any(isinstance(value, dict) for value in dictionary.values()) and \
-           not any(isinstance(value, list) for value in dictionary.values()):
-           break
+#     # Keep iterating until the termination condition is satisfied
+#     while True:
+#         # Keep unpacking the json file until all values are atomic elements (not player_profiles_dict or list)
+#         dictionary = dict(chain.from_iterable(starmap(unpack, dictionary.items())))
+#         # Terminate condition: not any value in the json file is player_profiles_dict or list
+#         if not any(isinstance(value, dict) for value in dictionary.values()) and \
+#            not any(isinstance(value, list) for value in dictionary.values()):
+#            break
 
-    return dictionary
+#     return dictionary
 
-
+from flatten_json import flatten
 def build_player_profiles_df(id_keys_list):
     player_profiles_list = []
     for key in id_keys_list:
@@ -182,9 +182,19 @@ def build_player_profiles_df(id_keys_list):
         except json.JSONDecodeError:
             # print(f"Invalid JSON data in file response{key}.json")
             pass
-    
+
     df = pd.json_normalize(player_profiles_list)
-    return df.explode("seasons")
+
+    dic_flattened = []
+    try:
+        dic_flattened = [flatten(dict(d)) for d in df.to_dict(orient='records')]
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        pass
+    
+    df = pd.DataFrame(dic_flattened)
+
+    return df
     # player_profiles_df = pd.json_normalize(flat_list)
 
     # write dataframe to a pickle file
@@ -244,16 +254,24 @@ def main():
     # scrape_player_id(PLAYER_MAPPINGS_APIKEY)
     id_keys_list = parse_id_keys()
     player_profiles_df = build_player_profiles_df(id_keys_list)
-    print(player_profiles_df)
+    # print(player_profiles_df)
     #read pickle file with pandas
     # profile_df = pd.read_pickle('C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/player_profiles_df.pkl')
     # print(profile_df)
     #is json normalize capable of exploding nested json. 3-5 levels deep. 
     # print(player_profiles_df.shape)
     # print(player_profiles_df.info())  
-    # print(player_profiles_df.head(150))   
-    # create_data_frame()
-    # database_connection()
+    # print(player_profiles_df.head(15))  
+    # Define the conditions
+    condition1 = 'seasons_8_year'
+    condition2 = ''
+
+    # Get the column names satisfying the conditions
+    filtered_columns = [col_name for col_name in player_profiles_df.columns if condition1 in col_name and condition2 in col_name]
+
+    # Print the filtered column names
+    print(filtered_columns)
+    print(player_profiles_df.loc[:, ['full_name', 'seasons_1_year']])
 
 if __name__ == "__main__":
     main()
