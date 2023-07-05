@@ -117,7 +117,7 @@ def build_player_profiles_lst(id_keys_list):
     Profiles_lst = []
     for key in id_keys_list:
         try:
-            with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{key}.json") as infile:
+            with open(f"C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/json_files/response{key}.json") as infile:
                 json_data = json.load(infile)
                 Profiles_lst.append(json_data)
         except FileNotFoundError:
@@ -160,20 +160,20 @@ def flatten_json_iterative_solution(dictionary):
     # Keep iterating until the termination condition is satisfied
     while True:
         # Keep unpacking the json file until all values are atomic elements (not player_profiles_dict or list)
-        player_profiles_dict = dict(chain.from_iterable(starmap(unpack, player_profiles_dict.items())))
+        dictionary = dict(chain.from_iterable(starmap(unpack, dictionary.items())))
         # Terminate condition: not any value in the json file is player_profiles_dict or list
-        if not any(isinstance(value, dict) for value in player_profiles_dict.values()) and \
-           not any(isinstance(value, list) for value in player_profiles_dict.values()):
-            break
+        if not any(isinstance(value, dict) for value in dictionary.values()) and \
+           not any(isinstance(value, list) for value in dictionary.values()):
+           break
 
-    return player_profiles_dict
+    return dictionary
 
 
 def build_player_profiles_df(id_keys_list):
     player_profiles_list = []
     for key in id_keys_list:
         try:
-            with open(f"C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/json_files/response{key}.json") as infile:
+            with open(f"C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/json_files/response{key}.json") as infile:
                 json_data = json.load(infile)
                 player_profiles_list.append(json_data)
         except FileNotFoundError:
@@ -182,13 +182,15 @@ def build_player_profiles_df(id_keys_list):
         except json.JSONDecodeError:
             # print(f"Invalid JSON data in file response{key}.json")
             pass
-    flat_list = flatten_json_iterative_solution(player_profiles_list)
-    player_profiles_df = pd.json_normalize(flat_list)
+    
+    df = pd.json_normalize(player_profiles_list)
+    return df.explode("seasons")
+    # player_profiles_df = pd.json_normalize(flat_list)
 
     # write dataframe to a pickle file
-    player_profiles_df.to_pickle('player_profiles_df.pkl')
+    # player_profiles_df.to_pickle('player_profiles_df.pkl')
 
-    return player_profiles_df
+    # return player_profiles_df
 
 
 from sqlalchemy import exc
@@ -242,8 +244,11 @@ def main():
     # scrape_player_id(PLAYER_MAPPINGS_APIKEY)
     id_keys_list = parse_id_keys()
     player_profiles_df = build_player_profiles_df(id_keys_list)
-
     print(player_profiles_df)
+    #read pickle file with pandas
+    # profile_df = pd.read_pickle('C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/player_profiles_df.pkl')
+    # print(profile_df)
+    #is json normalize capable of exploding nested json. 3-5 levels deep. 
     # print(player_profiles_df.shape)
     # print(player_profiles_df.info())  
     # print(player_profiles_df.head(150))   
