@@ -25,6 +25,8 @@ raw_player_id_data = []
 id_keys_list = []
 # Step 3(alternate): Create an empty dictionary to store the player profiles. 
 player_profiles_dict = {}
+#
+path = "C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/"
 
 
 # --------Step 1--------: scrape the SportRadar API for the player ID keys.
@@ -112,12 +114,12 @@ def api_scrape_player_profiles(id_keys_list, PLAYER_PROFILE_APIKEY):
 This step is optional and requires having made the API calls and saved the players profiles' to json files. 
 The goal here is to build a player profile dictionary from the saved player profiles. 
 """
-def build_player_profiles_lst(id_keys_list):
+def build_player_profiles_lst(id_keys_list, path):
 
     Profiles_lst = []
     for key in id_keys_list:
         try:
-            with open(f"C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/json_files/response{key}.json") as infile:
+            with open(f"{path}/json_files/response{key}.json") as infile:
                 json_data = json.load(infile)
                 Profiles_lst.append(json_data)
         except FileNotFoundError:
@@ -169,11 +171,11 @@ This step creates a dataframe and then saves it into a pkl file.
 #     return dictionary
 
 from flatten_json import flatten
-def build_player_profiles_df(id_keys_list):
+def build_player_profiles_df(id_keys_list, path):
     player_profiles_list = []
     for key in id_keys_list:
         try:
-            with open(f"C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/json_files/response{key}.json") as infile:
+            with open(f"{path}/json_files/response{key}.json") as infile:
                 json_data = json.load(infile)
                 player_profiles_list.append(json_data)
         except FileNotFoundError:
@@ -206,10 +208,10 @@ def build_player_profiles_df(id_keys_list):
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 #load dataframe into postgresql
-def database_connection(PW="testing123", HOST='localhost', PORT='5432', path='C:/Users/brend/Documents/GitHub/DA-Sports-Scheduling-App/my_dataframe.pkl'):
+def database_connection(PW="testing123", HOST='localhost', PORT='5432', df_path = os.path.join(path, "/my_dataframe.pkl")):
     
     #read pickle file with pandas
-    profile_df = pd.read_pickle(path)
+    profile_df = pd.read_pickle(df_path)
     
     #establishing the connection
     conn = psycopg2.connect(
