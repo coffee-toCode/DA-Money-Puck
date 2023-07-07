@@ -25,8 +25,7 @@ raw_player_id_data = []
 id_keys_list = []
 # Step 3(alternate): Create an empty dictionary to store the player profiles. 
 player_profiles_dict = {}
-#
-path = "C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/"
+
 
 
 # --------Step 1--------: scrape the SportRadar API for the player ID keys.
@@ -114,12 +113,12 @@ def api_scrape_player_profiles(id_keys_list, PLAYER_PROFILE_APIKEY):
 This step is optional and requires having made the API calls and saved the players profiles' to json files. 
 The goal here is to build a player profile dictionary from the saved player profiles. 
 """
-def build_player_profiles_lst(id_keys_list, path):
+def build_player_profiles_lst(id_keys_list):
 
     Profiles_lst = []
     for key in id_keys_list:
         try:
-            with open(f"{path}/json_files/response{key}.json") as infile:
+            with open(f"{os.getcwd()}/json_files/response{key}.json") as infile:
                 json_data = json.load(infile)
                 Profiles_lst.append(json_data)
         except FileNotFoundError:
@@ -171,11 +170,11 @@ This step creates a dataframe and then saves it into a pkl file.
 #     return dictionary
 
 from flatten_json import flatten
-def build_player_profiles_df(id_keys_list, path):
+def build_player_profiles_df(id_keys_list):
     player_profiles_list = []
     for key in id_keys_list:
         try:
-            with open(f"{path}/json_files/response{key}.json") as infile:
+            with open(f"{os.getcwd()}/json_files/response{key}.json") as infile:
                 json_data = json.load(infile)
                 player_profiles_list.append(json_data)
         except FileNotFoundError:
@@ -195,6 +194,8 @@ def build_player_profiles_df(id_keys_list, path):
         pass
     
     df = pd.DataFrame(dic_flattened)
+    
+
 
     return df
     # player_profiles_df = pd.json_normalize(flat_list)
@@ -208,7 +209,7 @@ def build_player_profiles_df(id_keys_list, path):
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 #load dataframe into postgresql
-def database_connection(PW="testing123", HOST='localhost', PORT='5432', df_path = os.path.join(path, "/my_dataframe.pkl")):
+def database_connection(PW="testing123", HOST='localhost', PORT='5432', df_path = f"{os.getcwd()}/my_dataframe.pkl"):
     
     #read pickle file with pandas
     profile_df = pd.read_pickle(df_path)
@@ -256,7 +257,8 @@ def main():
     # scrape_player_id(PLAYER_MAPPINGS_APIKEY)
     id_keys_list = parse_id_keys()
     player_profiles_df = build_player_profiles_df(id_keys_list)
-    # print(player_profiles_df)
+    print(player_profiles_df)
+    df = player_profiles_df.to_csv('player_profile_df.csv', index=False)
     #read pickle file with pandas
     # profile_df = pd.read_pickle('C:/Users/brend/Documents/GitHub/DA-MONEY-PUCK/player_profiles_df.pkl')
     # print(profile_df)
@@ -265,15 +267,15 @@ def main():
     # print(player_profiles_df.info())  
     # print(player_profiles_df.head(15))  
     # Define the conditions
-    condition1 = 'seasons_8_year'
-    condition2 = ''
+    # condition1 = 'seasons_8_year'
+    # condition2 = ''
 
-    # Get the column names satisfying the conditions
-    filtered_columns = [col_name for col_name in player_profiles_df.columns if condition1 in col_name and condition2 in col_name]
+    # # Get the column names satisfying the conditions
+    # filtered_columns = [col_name for col_name in player_profiles_df.columns if condition1 in col_name and condition2 in col_name]
 
-    # Print the filtered column names
-    print(filtered_columns)
-    print(player_profiles_df.loc[:, ['full_name', 'seasons_1_year']])
+    # # Print the filtered column names
+    # print(filtered_columns)
+    # print(player_profiles_df.loc[:, ['full_name', 'seasons_1_year']])
 
 if __name__ == "__main__":
     main()
